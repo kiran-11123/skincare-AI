@@ -5,10 +5,10 @@ import jwt from 'jsonwebtoken'
 import user_model from '../models/users.js'
 import { GenerateJWT } from '../../utils/jwt.js'
 import transporter from '../../utils/Nodemaier.js'
-
+import { app_logger } from '../../utils/logger/app_logger.js'
 
 export const Signin_Service = async(email , password)=>{
-       
+    app_logger.info(`Entered into the Signin Service`)  
     try{
 
         // check whether the email is present in the DB
@@ -23,8 +23,15 @@ export const Signin_Service = async(email , password)=>{
 
         const password_check = await bcrypt.compare(password , find_user.password);
 
-        const token  = GenerateJWT(email);
+        if(!password_check){
 
+            throw new Error('Credentials are Wrong')
+
+        }
+
+        const token  = GenerateJWT(email);
+        
+        app_logger.info(`JWT generated successfully for the user with email: ${email}`)
         return token;
 
     }
@@ -36,7 +43,8 @@ export const Signin_Service = async(email , password)=>{
 
 
 export const Signup_Service = async(email  , username , password)=>{
-
+    
+    app_logger.info(`Entered into the Signup Service`)
     try{
 
         const find_user = await user_model.findOne({email :email});
@@ -58,7 +66,8 @@ export const Signup_Service = async(email  , username , password)=>{
              username:username,
              password :hashedPassword
         })
-
+        
+        app_logger.info(`User created successfully with email: ${email} and username: ${username}`) 
         return user;
 
     }
@@ -70,7 +79,8 @@ export const Signup_Service = async(email  , username , password)=>{
 
 
 export const Generate_Code_Service = async(email)=>{
-      
+    
+    app_logger.info(`Entered into the Generate Code Service`)
     try{
 
         const find_user = await user_model.findOne({email :email})
@@ -102,7 +112,8 @@ export const Generate_Code_Service = async(email)=>{
         <p>This code will expire in <strong>15 minutes</strong>.</p>
       `
         })
-
+        
+        app_logger.info(`Password reset code sent to email: ${email}`)
         return {
             message : "Password reset code sent to the mail successfully",
             email,
@@ -118,7 +129,8 @@ export const Generate_Code_Service = async(email)=>{
 
 
 export const Verify_Code_Service = async(email , code)=>{
-       
+    
+    app_logger.info(`Entered into the Verify Code Service`)
     try{
 
         const find_user = await user_model.findOne({email : email})
@@ -138,6 +150,7 @@ export const Verify_Code_Service = async(email , code)=>{
              throw new Error('Code is Invalid')
         }
 
+        app_logger.info(`Verification code for email: ${email} is valid`)
         return email ; 
     }
     catch(er){
@@ -146,7 +159,7 @@ export const Verify_Code_Service = async(email , code)=>{
 }
 
 export const Change_Password_Service = async(email , password)=>{
-       
+    app_logger.info(`Entered into the Change Password Service`)   
     try{
 
         const find_user = await user_model.findOne({email  :email})
@@ -159,7 +172,7 @@ export const Change_Password_Service = async(email , password)=>{
         find_user.password = hashedPassword;
 
         await find_user.save();
-
+        app_logger.info(`Password changed successfully for email: ${email}`)
         return email ;
 
     }
