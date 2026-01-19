@@ -1,1 +1,4 @@
-.env 
+# env files
+.env
+*.env
+api-gateway/.env
